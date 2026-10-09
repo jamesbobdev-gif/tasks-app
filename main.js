@@ -552,14 +552,55 @@ function agentBrowserPreview(url, lane) {
   previewBatches[k].urls.push(url);
   return previewBatches[k].done.then((found) => found[url] || null);
 }
+// node can't run files from inside app.asar: a copy of agent/<name> next to the browser tool, kept current
+function agentScript(name) {
+  const script = path.join(agentBrowserDir(), name);
+  const src = fs.readFileSync(path.join(__dirname, 'agent', name), 'utf8');
+  try { if (fs.readFileSync(script, 'utf8') !== src) fs.writeFileSync(script, src); } catch (e) { fs.mkdirSync(agentBrowserDir(), { recursive: true }); fs.writeFileSync(script, src); }
+  return script;
+}
+/* A picture of the form for James before he says yes: when a worker stops at "Reply yes to submit", the
+   page it filled in its browser is photographed (agent/browser-shot.js, only a tab on the task's own
+   sites, so a run with several forms open never shows the wrong one) and uploaded like his photos, so
+   the desktop and phone show it on that message. James chose this over desktop-only (2026-10-09). */
+const asksForYes = (note) => /reply\s*\**\s*yes/i.test(String(note || ''));
+const sitesOf = (...things) => [...new Set((JSON.stringify(things).match(/https?:\/\/[^\s"'<>)\\]+/g) || [])
+  .map((u) => { try { return new URL(u).hostname.replace(/^www\./, '').toLowerCase(); } catch (e) { return null; } }).filter(Boolean))];
+async function approvalShot(lane, sites) {
+  const a = ((readConfig().sync) || {}).agent, node = findNode();
+  if (!a || !a.url || !a.key || !a.syncKey || !node || !sites.length) return null;
+  const local = lane === 'local'; // never opens a browser just for this: only the one the worker used
+  const port = local ? QWEN_BROWSER_LOCAL_PORT : AGENT_BROWSER_PORT;
+  if (local ? !(await ensureQwenBrowser()) : !(await fetch('http://127.0.0.1:' + port + '/json/version', { signal: AbortSignal.timeout(1500) }).then((r) => r.ok).catch(() => false))) return null;
+  const file = path.join(app.getPath('temp'), 'tasks-shot-' + crypto.randomUUID() + '.jpg');
+  try {
+    const res = await new Promise((resolve) => {
+      let out = '';
+      const p = require('child_process').spawn(node, [agentScript('browser-shot.js'), String(port), file, sites.join(',')], { windowsHide: true });
+      const killer = setTimeout(() => { try { p.kill(); } catch (e) {} }, 60 * 1000);
+      p.stdout.on('data', (d) => { out += d; });
+      p.on('error', () => { clearTimeout(killer); resolve({ why: 'couldn’t start node' }); });
+      p.on('close', () => { clearTimeout(killer); try { resolve(JSON.parse(out)); } catch (e) { resolve({ why: 'no answer' }); } });
+    });
+    if (!res.ok) { agentLog('screenshot (' + lane + '): ' + res.why); return null; }
+    const base = a.url.replace(/\/+$/, ''), key = a.syncKey + '/' + crypto.randomUUID() + '.jpg';
+    const r = await fetch(base + '/storage/v1/object/agent-attachments/' + key, { method: 'POST',
+      headers: { apikey: a.key, Authorization: 'Bearer ' + a.key, 'Content-Type': 'image/jpeg' }, body: fs.readFileSync(file) });
+    if (!r.ok) { agentLog('screenshot upload failed (' + r.status + ')'); return null; }
+    agentLog('screenshot (' + lane + ') of ' + res.url);
+    return base + '/storage/v1/object/public/agent-attachments/' + key;
+  } catch (e) { agentLog('screenshot failed: ' + e.message); return null; }
+  finally { fs.unlink(file, () => {}); }
+}
+function agentTaskById(id) {
+  try { return (JSON.parse(fs.readFileSync(dataFile(), 'utf8')).tasks || []).find((t) => t.id === id) || null; } catch (e) { return null; }
+}
 async function runBrowserPreview(urls, lane) {
   if ((readConfig().agentRunner || {}).browser === false) return {};
   const node = findNode();
   const local = lane === 'local'; // the mini PC's answers: its own browser (via the SSH tunnel), never one here
   if (!node || !(local ? await ensureQwenBrowser() : await ensureAgentBrowser())) return {};
-  const script = path.join(agentBrowserDir(), 'browser-preview.js');
-  const src = fs.readFileSync(path.join(__dirname, 'agent', 'browser-preview.js'), 'utf8');
-  try { if (fs.readFileSync(script, 'utf8') !== src) fs.writeFileSync(script, src); } catch (e) { fs.writeFileSync(script, src); }
+  const script = agentScript('browser-preview.js');
   return new Promise((resolve) => {
     let out = '';
     const p = require('child_process').spawn(node, [script, String(local ? QWEN_BROWSER_LOCAL_PORT : AGENT_BROWSER_PORT), ...urls], { windowsHide: true });
@@ -718,6 +759,11 @@ async function startAgentRun() {
       const opts = Array.isArray(u.options) && u.options.length
         ? (await Promise.all(u.options.slice(0, 10).map((o) => enrichOption(o)))).filter(Boolean) : [];
       u.options = opts.length ? opts : null;
+      if (u.status === 'needs-you' && asksForYes(u.note)) {
+        const t = agentTaskById(u.id) || {};
+        const shot = await approvalShot('claude', sitesOf(u.note, u.options, t.title, t.notes, t.reply, t.history));
+        if (shot) u.images = [shot];
+      }
     }
     const missing = ids.filter((id) => !valid.some((u) => u.id === id));
     agentLog('answered ' + valid.length + ', missing ' + missing.length);
@@ -1216,8 +1262,10 @@ async function runLocalTask(c, t) {
   const opts = Array.isArray(final.options) && final.options.length
     ? (await Promise.all(final.options.slice(0, 6).filter((o) => o && /^https:\/\//i.test(String(o.url || ''))).map((o) => enrichOption(o, 'local')))).filter(Boolean) : [];
   agentLog('local: answered in ' + Math.round((Date.now() - started) / 1000) + 's');
+  const shot = browser && final.status !== 'done' && asksForYes(final.note)
+    ? await approvalShot('local', sitesOf(final.note, t.title, t.notes, t.reply, t.history)) : null;
   sendToRenderer('agent:results', [{ id: t.id, lane: 'local', status: final.status === 'done' ? 'done' : 'needs-you',
-    note: String(final.note || '').slice(0, 1500) || 'Done.', options: opts.length ? opts : null, pref: null }]);
+    note: String(final.note || '').slice(0, 1500) || 'Done.', options: opts.length ? opts : null, pref: null, images: shot ? [shot] : undefined }]);
 }
 
 global.__agentTest = { parseUsageLimit, holdForUsage, recentReplies, maybeTidyMemory };

@@ -2734,6 +2734,7 @@ if(window.desktop&&window.desktop.onAgentResults){
       (Array.isArray(u.asks)?u.asks:[]).forEach(function(q){ agentSay(t,'sys','Mini PC asked Claude: '+q); });
       const extra=Array.isArray(u.options)&&u.options.length?{options:u.options.map(function(o){ return o.label; })}:{};
       if(u.lane==='local')extra.lane='local';
+      if(Array.isArray(u.images)&&u.images.length)extra.images=u.images.slice(0,2); // the form it filled, before his yes
       agentSay(t,'claude',u.note,Object.keys(extra).length?extra:null);
       if(u.pref)prefLines.push(u.pref);
     });
