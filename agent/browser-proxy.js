@@ -97,7 +97,8 @@ function lockedOut(msg) {
     const label = (refLabels[a.target || a.ref] || '') + ' ' + String(a.element || '');
     if (FINAL.test(label)) return 'Locked: "' + label.trim() + '" looks like a final step (submit, send, buy, book…). Stop here and ask James to reply yes.';
   }
-  if ((name === 'browser_press_key' && /^enter$/i.test(String(a.key || ''))) || (name === 'browser_type' && a.submit))
+  // any Enter: "Enter", "NumpadEnter", "Shift+Enter", "Control+Enter"… all submit a form
+  if ((name === 'browser_press_key' && /(^|\+)\s*(numpad)?enter\s*$/i.test(String(a.key || ''))) || (name === 'browser_type' && a.submit))
     return 'Locked: pressing Enter can submit a form. Click the field-by-field controls instead, and ask James to reply yes before submitting.';
   return null;
 }

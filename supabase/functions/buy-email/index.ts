@@ -17,7 +17,7 @@ function esc(s: unknown): string {
 }
 
 async function secrets(): Promise<Record<string, string>> {
-  const r = await fetch(`${BASE}/rest/v1/app_secrets?name=in.(buy_email_token,resend_api_key)&select=name,value`, {
+  const r = await fetch(`${BASE}/rest/v1/app_secrets?name=in.(buy_email_token,resend_api_key,buy_email_to)&select=name,value`, {
     headers: { apikey: SKEY, Authorization: `Bearer ${SKEY}` },
   });
   if (!r.ok) return {};
@@ -25,6 +25,9 @@ async function secrets(): Promise<Record<string, string>> {
 }
 const SECRETS = await secrets();
 const FN_TOKEN = SECRETS.buy_email_token || "";
+// Optional: his own address (app_secrets row buy_email_to). When it's set, mail only ever goes there,
+// whatever the request says, so the token alone can't be used to email anyone else.
+const ONLY_TO = (SECRETS.buy_email_to || "").trim().toLowerCase();
 
 // deno-lint-ignore no-explicit-any
 function html(b: any): string {
@@ -34,7 +37,7 @@ function html(b: any): string {
   const meta = [b.price, b.rating].filter(Boolean).map(esc).join(" &middot; ");
   return '<div style="font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:480px;margin:0 auto;color:#161616">' +
     '<h2 style="font-size:18px;margin:0 0 12px">' + esc(b.label) + '</h2>' +
-    (b.image ? '<img src="' + esc(b.image) + '" alt="" style="max-width:260px;border-radius:10px;border:1px solid #e9e9e5;margin-bottom:12px"><br>' : "") +
+    (b.image && /^https:\/\//i.test(String(b.image)) ? '<img src="' + esc(b.image) + '" alt="" style="max-width:260px;border-radius:10px;border:1px solid #e9e9e5;margin-bottom:12px"><br>' : "") +
     (meta ? '<div style="color:#71716c;margin-bottom:14px">' + meta + '</div>' : "") +
     '<a href="' + esc(b.url) + '" style="display:inline-block;background:#2742c8;color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:10px">' +
     (print ? 'Open the model on ' : link ? 'Open on ' : 'Buy on ') + esc(site) + ' &rarr;</a>' +
@@ -57,6 +60,12 @@ Deno.serve(async (req) => {
   try { b = await req.json(); } catch (_e) { return new Response(JSON.stringify({ error: "bad json" }), { status: 400 }); }
   if (!b || !b.to || !b.url || !b.label) {
     return new Response(JSON.stringify({ error: "need to, label, url" }), { status: 400 });
+  }
+  if (ONLY_TO && String(b.to).trim().toLowerCase() !== ONLY_TO) {
+    return new Response(JSON.stringify({ error: "recipient not allowed" }), { status: 403 });
+  }
+  if (!/^https?:\/\//i.test(String(b.url))) { // the button's link: web pages only
+    return new Response(JSON.stringify({ error: "url must be http(s)" }), { status: 400 });
   }
 
   const key = Deno.env.get("RESEND_API_KEY") || SECRETS.resend_api_key;

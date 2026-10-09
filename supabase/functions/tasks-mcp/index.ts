@@ -151,7 +151,8 @@ function checkList(v: unknown, allowAll = false): string {
 function checkDate(v: unknown): string | null {
   if (v === null || v === undefined || v === "") return null;
   const s = String(v);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s) || isNaN(Date.parse(s))) throw new UserError(`bad date "${s}" (use YYYY-MM-DD)`);
+  const d = new Date(s + "T00:00:00Z");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s) || isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== s) throw new UserError(`bad date "${s}" (use YYYY-MM-DD)`);
   return s;
 }
 function checkTime(v: unknown): string | null {
@@ -385,7 +386,7 @@ async function callTool(name: string, a: any): Promise<string> {
         let ts = (await load(l)).doc.tasks;
         if (q) ts = ts.filter((t) => [t.title, t.tag, t.note].some((x) => x && String(x).toLowerCase().includes(q)));
         if (before) ts = ts.filter((t) => t.due && t.due <= before);
-        if (a.status) ts = ts.filter((t) => (t.status || "queued") === a.status);
+        if (a.status) ts = l === "agent" ? ts.filter((t) => (t.status || "queued") === a.status) : []; // only agent tasks have a status
         const open = ts.filter((t) => !t.done).sort((x, y) => sortKey(x).localeCompare(sortKey(y)));
         const done = a.include_done
           ? ts.filter((t) => t.done).sort((x, y) => (y.updatedAt || y.created || 0) - (x.updatedAt || x.created || 0)).slice(0, 25)
@@ -563,7 +564,10 @@ async function callTool(name: string, a: any): Promise<string> {
       const src = pick((await load(from)).doc, a.id);
       const c: Task = { ...src, id: uid(), googleEventId: null, updatedAt: now, subs: (src.subs || []).map((s) => ({ ...s })) };
       if (to === "agent") { c.status = "queued"; c.note = null; c.done = false; }
-      else { delete c.status; delete c.note; }
+      else {
+        // same fields the app drops when a task leaves the agent list
+        for (const k of ["status", "note", "reply", "replyImages", "options", "history", "repeat", "nextRun", "repeatDue", "fromWs", "waitUntil", "useInbox", "buyEmail", "routeAsk"]) delete c[k];
+      }
       delete c.lane; delete c.claimedBy; delete c.claimedAt; // a fresh start: routed again, claimed again
       // add the copy first so a failure can never lose the task
       await mutate(to, (d) => { d.tasks.push(c); });

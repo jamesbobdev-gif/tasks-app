@@ -1,2 +1,0 @@
-[   -1218ms] [ERROR] Failed to load resource: the server responded with a status of 404 () @ https://httpbin.org/favicon.ico:0
-[   73782ms] [WARNING] The specified value "7pm" does not conform to the required format.  The format is "HH:mm", "HH:mm:ss" or "HH:mm:ss.SSS" where HH is 00-23, mm is 00-59, ss is 00-59, and SSS is 000-999. @ :7667

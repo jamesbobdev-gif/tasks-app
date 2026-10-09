@@ -23,3 +23,9 @@ mobile/android/app/src/main/res/raw/school_sync_config.json
 
 # local safety copies made before installs
 .backup-*/
+
+# browser-automation logs
+.playwright-mcp/
+
+# OS installer images (multi-GB; download them, never commit them)
+*.iso

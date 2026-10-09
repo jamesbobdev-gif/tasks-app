@@ -213,6 +213,47 @@ input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-ca
 .tab{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;padding:8px 16px;border:0;background:transparent;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
 .tab:hover{color:var(--ink)}
 .tab.active{color:var(--ink);border-bottom-color:var(--ink)}
+@media(max-width:520px){.tab{padding:8px 10px}}
+
+/* ── ideas: note cards you sort into groups ── */
+:root{
+  --idea-plain:var(--surface);--idea-yellow:#FFF1B8;--idea-green:#D6F0D9;
+  --idea-blue:#D9E3FF;--idea-pink:#FAD9E3;--idea-purple:#E7DAFA;
+}
+body.ideas-mode main{max-width:1180px}
+.ideas-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.ideas-bar .btn-accent{margin-left:0}
+.ideas-hint{color:var(--faint)}
+.idea-groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;align-items:start}
+.idea-group{background:var(--surface);border:1px solid var(--hairline);border-radius:14px;padding:10px 12px 12px;min-height:120px;transition:border-color .15s,box-shadow .15s}
+.idea-group.over{border-color:var(--accent);box-shadow:0 0 0 3px rgba(39,66,200,.08)}
+.idea-ghead{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.idea-gname{flex:1;min-width:0;border:0;outline:0;background:transparent;font-family:var(--display);font-size:14.5px;font-weight:600;color:var(--ink);padding:3px 2px;border-radius:5px}
+.idea-gname:focus{background:var(--chip)}
+.idea-gname[readonly]{color:var(--muted)}
+.idea-gcount{color:var(--faint)}
+.idea-gcolor{width:16px;height:16px;border-radius:50%;border:1px solid var(--hairline);cursor:pointer;padding:0;flex:none}
+.idea-gdel{border:0;background:transparent;color:var(--faint);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;border-radius:5px}
+.idea-gdel:hover{color:var(--late);background:var(--late-bg)}
+.idea-cards{display:flex;flex-direction:column;gap:8px;min-height:40px}
+.idea-card{position:relative;padding:10px 12px;border-radius:11px;background:var(--g,var(--idea-plain));color:#161616;border:1px solid rgba(20,20,20,.07);
+  font-size:13.5px;line-height:1.45;cursor:grab;user-select:none;-webkit-user-select:none;white-space:pre-wrap;overflow-wrap:anywhere;
+  box-shadow:0 1px 2px rgba(20,20,20,.05);transition:box-shadow .15s}
+.idea-group[data-color="plain"] .idea-card{color:var(--ink);background:var(--chip)}
+.idea-card:hover{box-shadow:0 2px 6px rgba(20,20,20,.1)}
+.idea-card .clip{display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden}
+.idea-card.ph{background:transparent;border:1.5px dashed var(--faint);box-shadow:none}
+.idea-card.lifted{position:fixed;z-index:50;pointer-events:none;cursor:grabbing;box-shadow:0 10px 26px rgba(20,20,20,.2);transform:rotate(-1.5deg);margin:0}
+.idea-card.editing{cursor:text;padding:8px 10px 6px 12px}
+.idea-card textarea{display:block;width:100%;border:0;outline:0;resize:none;background:transparent;font:inherit;color:inherit;padding:2px 0;margin:0;min-height:60px;overflow:hidden}
+.idea-edit-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px}
+.idea-edit-foot .mono{opacity:.55;font-size:9.5px}
+.idea-card .x{border:0;background:transparent;color:inherit;opacity:.55;cursor:pointer;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;padding:3px 6px;border-radius:6px}
+.idea-card .x:hover{opacity:1;background:rgba(20,20,20,.08)}
+.idea-addb{border:1px dashed var(--hairline);background:transparent;color:var(--faint);border-radius:11px;padding:8px 12px;font-size:13px;cursor:pointer;text-align:left}
+.idea-addb:hover{color:var(--ink);border-color:var(--faint)}
+.idea-empty{color:var(--faint);font-size:13px;padding:6px 2px}
+@media(max-width:520px){.ideas-hint{display:none}.idea-groups{grid-template-columns:1fr}}
 
 /* ── calendar view ── */
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
@@ -461,6 +502,7 @@ textarea.theme-css{resize:vertical;min-height:120px;line-height:1.5;white-space:
     <button id="tabAgent" class="tab"       role="tab" aria-selected="false" hidden>Agent</button>
     <button id="tabSchool" class="tab"      role="tab" aria-selected="false" hidden>School</button>
     <button id="tabCal"  class="tab"        role="tab" aria-selected="false">Calendar</button>
+    <button id="tabIdeas" class="tab"       role="tab" aria-selected="false">Ideas</button>
   </div>
 
   <section class="composer" aria-label="Add a task">
@@ -509,6 +551,15 @@ textarea.theme-css{resize:vertical;min-height:120px;line-height:1.5;white-space:
     <div id="calGrid" class="cal-grid"></div>
     <div id="calEmpty" class="cal-empty" hidden>No tasks with due dates yet.</div>
   </div>
+
+  <!-- Ideas (hidden by default) -->
+  <div id="ideasView" hidden>
+    <div class="ideas-bar">
+      <button id="ideaAddGroup" class="btn-accent">+ Group</button>
+      <span class="mono ideas-hint">Drag ideas between groups · click one to read or edit it</span>
+    </div>
+    <div id="ideaGroups" class="idea-groups"></div>
+  </div>
 </main>
 
 <script>
@@ -547,7 +598,7 @@ try{ applyTheme(localStorage.getItem(THEME_KEY)||''); }catch(e){}
    Each syncs with its own Supabase project; the remote docs never contain
    the ws field, so other devices/apps on a channel need no changes. */
 const SYNC_CFG_KEY='tasks.sync.v1';
-const syncState={ cfg:null, busy:false, pushTimer:null, pollTimer:null };
+const syncState={ cfg:null, busy:false, again:false, pushTimer:null, pollTimer:null };
 function normalizeSyncCfg(raw){
   if(!raw)return null;
   if(raw.url)return {personal:raw}; // legacy single-profile shape
@@ -690,8 +741,16 @@ function mergeRemoteWs(remoteDoc,ws){
 }
 
 async function syncNow(){
-  if(!syncEnabled()||syncState.busy)return;
-  syncState.busy=true;
+  if(!syncEnabled())return;
+  if(syncState.busy){ syncState.again=true; return; } // an edit during a sync: run once more right after it
+  syncState.busy=true; syncState.again=false;
+  try{ await syncOnce(); }
+  finally{
+    syncState.busy=false;
+    if(syncState.again){ syncState.again=false; schedulePush(); }
+  }
+}
+async function syncOnce(){
   setSyncStatus('syncing…');
   let firstErr=null, anyLocal=false;
   const list=profileList();
@@ -712,6 +771,21 @@ async function syncNow(){
       if(!firstErr)firstErr=e;
     }
   }
+  const ip=ideasProfile();
+  if(ip){
+    try{
+      for(let attempt=0;attempt<4;attempt++){ // same download-merge-upload as the lists above
+        const row=await syncPullRow(ip);
+        const r=mergeIdeas(row.doc);
+        if(r.changedLocal)anyLocal=true;
+        if(!(r.changedRemote||(!row.doc&&(state.ideas.cards.length||state.ideas.groups.length))))break;
+        if(await syncPushCas(ip,ideasDoc(),row.updatedAt))break;
+        if(attempt===3)throw new Error('the ideas board kept changing; will retry');
+      }
+    }catch(e){
+      if(!firstErr)firstErr=e;
+    }
+  }
   if(anyLocal){
     rebuildSnap();
     store.save(currentDoc());
@@ -719,7 +793,6 @@ async function syncNow(){
   }
   if(firstErr)setSyncStatus('sync error: '+firstErr.message,true);
   else setSyncStatus('synced '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
-  syncState.busy=false;
 }
 function schedulePush(){
   if(!syncEnabled())return;
@@ -735,7 +808,7 @@ function startSyncLoop(){
 window.__syncNow=syncNow; // debugging hook
 
 /* ── state ── */
-const state={ tasks:[], tombstones:[], filter:null, wsFilter:null, search:'', selectedId:null, showDone:false, confirmClear:false, expanded:new Set(), activeTab:'list', calYear:new Date().getFullYear(), calMonth:new Date().getMonth() };
+const state={ tasks:[], tombstones:[], ideas:{groups:[],cards:[],tombstones:[]}, filter:null, wsFilter:null, search:'', selectedId:null, showDone:false, confirmClear:false, expanded:new Set(), activeTab:'list', calYear:new Date().getFullYear(), calMonth:new Date().getMonth() };
 let navOrder=[]; // ids of open tasks in rendered order, for arrow-key navigation
 // unsent answers to Claude, by task id — kept on disk so a restart or a lost task never eats them
 const DRAFTS_KEY='tasks.replyDrafts';
@@ -759,13 +832,13 @@ function stampChanges(){
   });
   Object.keys(lastSnap).forEach(function(id){ if(!seen[id])delete lastSnap[id]; });
 }
-function currentDoc(){ return {v:1,tasks:state.tasks,tombstones:state.tombstones}; }
+function currentDoc(){ return {v:1,tasks:state.tasks,tombstones:state.tombstones,ideas:state.ideas}; }
 function persist(){
   clearTimeout(saveTimer);
   saveTimer=setTimeout(function(){ stampChanges(); store.save(currentDoc()); schedulePush(); },200);
 }
 function touch(){ persist(); renderActive(); }
-function renderActive(){ if(state.activeTab==='calendar') renderCal(); else render(); }
+function renderActive(){ if(state.activeTab==='calendar') renderCal(); else if(state.activeTab==='ideas') renderIdeas(); else render(); }
 function uid(){ return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
 
 /* ── dates ── */
@@ -1227,7 +1300,7 @@ function toggleDone(t,liEl,checkEl){
   if(!t.done)buzz('check'); // only finishing something buzzes
   if(t.done){ setDone(t,false); touch(); }
   else if(prefersReduced){ setDone(t,true); touch(); }
-  else { checkEl.classList.add('on'); liEl.classList.add('leaving'); setTimeout(function(){ setDone(t,true); touch(); },200); }
+  else { checkEl.classList.add('on'); liEl.classList.add('leaving'); setTimeout(function(){ setDone(liveTask(t),true); touch(); },200); }
 }
 function deleteTask(t){
   if(t.googleEventId && window.desktop && window.desktop.gcalDeleteEvent) window.desktop.gcalDeleteEvent(t.googleEventId);
@@ -1240,7 +1313,7 @@ function startEdit(t,span){
   const input=el('input','title-edit'); input.value=t.title;
   input.addEventListener('click',function(e){ e.stopPropagation(); });
   let finished=false;
-  function commit(){ if(finished)return; finished=true; const v=input.value.trim(); if(v)t.title=v; touch(); }
+  function commit(){ if(finished)return; finished=true; const v=input.value.trim(); if(v)liveTask(t).title=v; touch(); }
   input.addEventListener('keydown',function(e){ if(e.key==='Enter')commit(); if(e.key==='Escape'){finished=true;render();} });
   input.addEventListener('blur',commit);
   span.replaceWith(input); input.focus(); input.select();
@@ -1551,11 +1624,13 @@ function buildPanel(t){
       catch(err){ sending=false; send.disabled=false; send.textContent='Send to Claude'; status.className='att-status err'; status.textContent='Couldn\u2019t send the photos: '+err.message; return; }
       atts.forEach(function(a){ URL.revokeObjectURL(a.preview); }); atts.length=0;
       delete replyDrafts[t.id]; saveDrafts();
+      const lt=liveTask(t); // a sync during the upload may have swapped the task object
+      const busy=!lt.done&&(lt.status==='working'||lt.status==='queued');
       const text=v||(urls.length===1?'(photo)':'('+urls.length+' photos)');
-      t.reply=(agentBusy&&t.reply)?t.reply+'\n'+text:text; // mid-run additions stack onto what you already sent
-      if(urls.length)t.replyImages=((agentBusy&&Array.isArray(t.replyImages))?t.replyImages:[]).concat(urls);
-      agentSay(t,'you',text,urls.length?{images:urls}:null);
-      buzz('send'); t.status='queued'; touch();
+      lt.reply=(busy&&lt.reply)?lt.reply+'\n'+text:text; // mid-run additions stack onto what you already sent
+      if(urls.length)lt.replyImages=((busy&&Array.isArray(lt.replyImages))?lt.replyImages:[]).concat(urls);
+      agentSay(lt,'you',text,urls.length?{images:urls}:null);
+      buzz('send'); lt.status='queued'; touch();
     }
     send.addEventListener('click',doSend);
     ta.addEventListener('keydown',function(e){ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); doSend(); } });
@@ -1640,7 +1715,7 @@ function buildPanel(t){
       });
     }
     async function doUpload(u){
-      try{ const url=await uploadAttachment(u.blob); const k=uploading.indexOf(u); if(k!==-1)uploading.splice(k,1); try{URL.revokeObjectURL(u.preview);}catch(_e){} t.images=(t.images||[]).concat([url]); drawPics(); touch(); }
+      try{ const url=await uploadAttachment(u.blob); const k=uploading.indexOf(u); if(k!==-1)uploading.splice(k,1); try{URL.revokeObjectURL(u.preview);}catch(_e){} const lt=liveTask(t); lt.images=(lt.images||[]).concat([url]); t.images=lt.images; drawPics(); touch(); }
       catch(e){ u.failed=true; drawPics(); }
     }
     drawPics(); panel.appendChild(strip);
@@ -1837,14 +1912,300 @@ function switchTab(tab){
   closeDayPop();
   if(tab!==state.activeTab)state.selectedId=null;
   state.activeTab=tab;
-  [['tabList','list'],['tabAgent','agent'],['tabSchool','school'],['tabCal','calendar']].forEach(function(p){
+  if(tab!=='ideas')ideaLeave();
+  [['tabList','list'],['tabAgent','agent'],['tabSchool','school'],['tabCal','calendar'],['tabIdeas','ideas']].forEach(function(p){
     $(p[0]).classList.toggle('active',tab===p[1]);
     $(p[0]).setAttribute('aria-selected',String(tab===p[1]));
   });
-  $('listView').hidden=tab==='calendar';
+  $('listView').hidden=tab==='calendar'||tab==='ideas';
   $('calView').hidden=tab!=='calendar';
-  if(tab==='calendar') renderCal(); else render();
+  $('ideasView').hidden=tab!=='ideas';
+  document.querySelector('.composer').hidden=tab==='ideas';
+  document.body.classList.toggle('ideas-mode',tab==='ideas');
+  if(tab==='calendar') renderCal(); else if(tab==='ideas') renderIdeas(); else render();
 }
+
+/* ── ideas: note cards you sort into groups ──
+   Each idea is a card in a group (group '' = Unsorted); within a group cards stack in `order`.
+   They live in state.ideas and sync through their own row next to the personal list
+   (syncKey+':ideas'), so the task lists, Claude's tools and older builds never see them.
+   Per card/group id the newer updatedAt wins; a tombstone beats older copies. */
+const IDEA_COLORS=['yellow','green','blue','pink','purple','plain'];
+const ideaUI={drag:null,editing:null,adding:null,pending:false};
+function normIdeas(raw){
+  const r=raw||{}; const num=function(v,d){ return isFinite(v)&&v!==null&&v!==''?+v:d; };
+  const groups=(Array.isArray(r.groups)?r.groups:[]).filter(function(g){ return g&&g.id; }).map(function(g,i){
+    return {id:String(g.id),name:String(g.name||''),color:IDEA_COLORS.indexOf(g.color)>=0?g.color:'yellow',order:num(g.order,i),updatedAt:g.updatedAt||0};
+  });
+  const cards=(Array.isArray(r.cards)?r.cards:[]).filter(function(c){ return c&&c.id; }).map(function(c,i){
+    return {id:String(c.id),text:String(c.text||''),group:c.group?String(c.group):'',order:num(c.order,i),updatedAt:c.updatedAt||0};
+  });
+  const tombs=(Array.isArray(r.tombstones)?r.tombstones:[]).filter(function(t){ return t&&t.id; });
+  return {groups:groups,cards:cards,tombstones:tombs};
+}
+function ideasProfile(){
+  const p=syncState.cfg&&syncState.cfg.personal;
+  return validProfile(p)?{url:p.url,key:p.key,syncKey:p.syncKey+':ideas'}:null;
+}
+function ideasDoc(){ return {v:2,groups:state.ideas.groups,cards:state.ideas.cards,tombstones:state.ideas.tombstones}; }
+function canonIdeas(d){
+  const by=function(a,b){ return a.id<b.id?-1:1; };
+  return JSON.stringify([d.groups.slice().sort(by),d.cards.slice().sort(by)]);
+}
+function mergeIdeas(remoteDoc){
+  const remote=normIdeas(remoteDoc), local=state.ideas;
+  const tombs={};
+  local.tombstones.concat(remote.tombstones).forEach(function(x){ if(!tombs[x.id]||x.deletedAt>tombs[x.id])tombs[x.id]=x.deletedAt; });
+  function mergeList(a,b){
+    const byId={};
+    a.concat(b).forEach(function(it){ const prev=byId[it.id]; if(!prev||(it.updatedAt||0)>(prev.updatedAt||0))byId[it.id]=it; });
+    return Object.keys(byId).map(function(id){ return byId[id]; })
+      .filter(function(it){ return !(tombs[it.id]&&tombs[it.id]>=(it.updatedAt||0)); });
+  }
+  const cutoff=Date.now()-60*86400000; // drop tombstones older than 60 days
+  const mergedTombs=Object.keys(tombs).filter(function(id){ return tombs[id]>cutoff; })
+    .map(function(id){ return {id:id,deletedAt:tombs[id]}; });
+  const merged={groups:mergeList(local.groups,remote.groups),cards:mergeList(local.cards,remote.cards),tombstones:mergedTombs};
+  const changedLocal=canonIdeas(merged)!==canonIdeas(local);
+  const changedRemote=canonIdeas(merged)!==canonIdeas(remote)||mergedTombs.length!==remote.tombstones.length;
+  state.ideas=merged;
+  return {changedLocal:changedLocal,changedRemote:changedRemote};
+}
+
+function ideaCard(id){ return state.ideas.cards.find(function(c){ return c.id===id; }); }
+function ideaGroup(id){ return state.ideas.groups.find(function(g){ return g.id===id; }); }
+// a card whose group was deleted on another device falls back to Unsorted
+function ideaGroupOf(c){ return c.group&&ideaGroup(c.group)?c.group:''; }
+function ideaCardsIn(gid){
+  return state.ideas.cards.filter(function(c){ return ideaGroupOf(c)===gid; })
+    .sort(function(a,b){ return a.order-b.order||(a.id<b.id?-1:1); });
+}
+function ideaTomb(id){ state.ideas.tombstones.push({id:id,deletedAt:Date.now()}); }
+function ideaRemoveCard(id){
+  state.ideas.cards=state.ideas.cards.filter(function(c){ return c.id!==id; });
+  ideaTomb(id); persist();
+}
+function ideaAddCard(gid,text){
+  const list=ideaCardsIn(gid);
+  state.ideas.cards.push({id:uid(),text:text,group:gid,order:list.length?list[list.length-1].order+1:0,updatedAt:Date.now()});
+  persist();
+}
+function ideaAddGroup(){
+  const gs=state.ideas.groups, now=Date.now();
+  const g={id:uid(),name:'',color:IDEA_COLORS[gs.length%5],order:gs.length?Math.max.apply(null,gs.map(function(x){ return x.order; }))+1:0,updatedAt:now};
+  gs.push(g); persist(); drawIdeas();
+  const inp=document.querySelector('.idea-group[data-group="'+g.id+'"] .idea-gname'); if(inp)inp.focus();
+}
+function ideaRemoveGroup(gid){
+  const now=Date.now();
+  // its cards aren't lost: they go back to Unsorted, after what's already there
+  const base=ideaCardsIn('').reduce(function(m,c){ return Math.max(m,c.order); },-1)+1;
+  ideaCardsIn(gid).forEach(function(c,i){ c.group=''; c.order=base+i; c.updatedAt=now; });
+  state.ideas.groups=state.ideas.groups.filter(function(g){ return g.id!==gid; });
+  ideaTomb(gid); persist(); drawIdeas();
+}
+// leaving the tab: let any open text box save itself
+function ideaLeave(){ const a=document.activeElement; if(a&&$('ideasView').contains(a))a.blur(); }
+
+// external re-renders (sync) wait while you're dragging or typing, so nothing is yanked away
+function renderIdeas(){
+  const a=document.activeElement;
+  if((ideaUI.drag&&ideaUI.drag.active)||(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')&&$('ideasView').contains(a))){ ideaUI.pending=true; return; }
+  drawIdeas();
+}
+function drawIdeas(){
+  ideaUI.pending=false;
+  const wrap=$('ideaGroups'); wrap.textContent='';
+  const groups=[{id:'',name:'Unsorted',color:'plain'}].concat(state.ideas.groups.slice().sort(function(a,b){ return a.order-b.order||(a.id<b.id?-1:1); }));
+  let focusEl=null;
+  groups.forEach(function(g){
+    const sec=el('section','idea-group'); sec.dataset.group=g.id; sec.dataset.color=g.color;
+    if(g.color!=='plain')sec.style.setProperty('--g','var(--idea-'+g.color+')');
+    const head=el('div','idea-ghead');
+    const name=el('input','idea-gname'); name.value=g.name; name.placeholder='Name this group'; name.setAttribute('aria-label','Group name');
+    const cards=ideaCardsIn(g.id);
+    if(!g.id){ name.readOnly=true; name.tabIndex=-1; }
+    else {
+      name.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key==='Escape')name.blur(); });
+      name.addEventListener('blur',function(){
+        const gg=ideaGroup(g.id); const v=name.value.trim();
+        if(gg&&v!==gg.name){ gg.name=v; gg.updatedAt=Date.now(); persist(); }
+        if(ideaUI.pending)drawIdeas();
+      });
+    }
+    head.appendChild(name);
+    head.appendChild(el('span','mono idea-gcount',cards.length?String(cards.length):''));
+    if(g.id){
+      const col=el('button','idea-gcolor'); col.style.background='var(--idea-'+g.color+')'; col.title='Change colour'; col.setAttribute('aria-label','Change colour');
+      col.addEventListener('click',function(){ const gg=ideaGroup(g.id); if(!gg)return; gg.color=IDEA_COLORS[(IDEA_COLORS.indexOf(gg.color)+1)%IDEA_COLORS.length]; gg.updatedAt=Date.now(); persist(); drawIdeas(); });
+      const del=el('button','idea-gdel','×'); del.title='Remove group (its ideas move to Unsorted)'; del.setAttribute('aria-label','Remove group');
+      del.addEventListener('click',function(){ ideaRemoveGroup(g.id); });
+      head.appendChild(col); head.appendChild(del);
+    }
+    sec.appendChild(head);
+    const flow=el('div','idea-cards'); flow.dataset.group=g.id;
+    cards.forEach(function(c){
+      const b=el('div','idea-card'); b.dataset.id=c.id;
+      if(ideaUI.editing===c.id){
+        b.classList.add('editing');
+        const ta=ideaTextBox(c.text,'Edit idea');
+        let done=false;
+        const commit=function(){
+          if(done)return; done=true; ideaUI.editing=null;
+          const cc=ideaCard(c.id), v=ta.value.replace(/\s+$/,'');
+          if(cc){ if(!v.trim())ideaRemoveCard(c.id); else if(v!==cc.text){ cc.text=v; cc.updatedAt=Date.now(); persist(); } }
+          drawIdeas();
+        };
+        ta.addEventListener('keydown',function(e){ if(e.key==='Escape'||(e.key==='Enter'&&(e.ctrlKey||e.metaKey))){ e.preventDefault(); commit(); } });
+        ta.addEventListener('blur',commit);
+        const foot=el('div','idea-edit-foot');
+        foot.appendChild(el('span','mono','click away to save'));
+        const x=el('button','x','Delete'); x.setAttribute('aria-label','Delete idea');
+        x.addEventListener('mousedown',function(e){ e.preventDefault(); });
+        x.addEventListener('click',function(){ done=true; ideaUI.editing=null; ideaRemoveCard(c.id); drawIdeas(); });
+        foot.appendChild(x);
+        b.appendChild(ta); b.appendChild(foot); focusEl=ta;
+      } else b.appendChild(el('div','clip',c.text));
+      flow.appendChild(b);
+    });
+    if(ideaUI.adding===g.id){
+      const b=el('div','idea-card editing'); const ta=ideaTextBox('','Write an idea…');
+      let done=false;
+      const save=function(){ const v=ta.value.replace(/\s+$/,''); if(v.trim())ideaAddCard(g.id,v); };
+      ta.addEventListener('keydown',function(e){
+        if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); done=true; save(); drawIdeas(); } // saved; a fresh box opens for the next one
+        else if(e.key==='Escape'){ e.preventDefault(); done=true; save(); ideaUI.adding=null; drawIdeas(); }
+      });
+      ta.addEventListener('blur',function(){ if(done)return; done=true; ideaUI.adding=null; save(); drawIdeas(); });
+      const foot=el('div','idea-edit-foot'); foot.appendChild(el('span','mono','click away to save · ctrl+enter for another'));
+      b.appendChild(ta); b.appendChild(foot); flow.appendChild(b); focusEl=ta;
+    } else {
+      const add=el('button','idea-addb','+ Add an idea'); add.setAttribute('aria-label','Add an idea to this group');
+      add.addEventListener('click',function(){ ideaUI.editing=null; ideaUI.adding=g.id; drawIdeas(); });
+      flow.appendChild(add);
+    }
+    if(!g.id&&!cards.length&&!state.ideas.groups.length&&ideaUI.adding!=='')
+      flow.insertBefore(el('div','idea-empty','Write ideas here, then make groups and drag them in.'),flow.firstChild);
+    sec.appendChild(flow);
+    wrap.appendChild(sec);
+  });
+  if(focusEl&&!$('ideasView').hidden){ focusEl.focus(); focusEl.setSelectionRange(focusEl.value.length,focusEl.value.length); focusEl.fit(); }
+}
+// a text box that grows with what you type
+function ideaTextBox(text,ph){
+  const ta=el('textarea'); ta.value=text; ta.placeholder=ph; ta.setAttribute('aria-label',ph);
+  ta.fit=function(){ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; };
+  ta.addEventListener('input',ta.fit);
+  return ta;
+}
+
+/* dragging: the card lifts off, a dashed gap follows the pointer and the other cards slide
+   aside. Mouse drags start after a few px; on a phone, press and hold (so swiping still scrolls). */
+(function(){
+  const wrap=$('ideaGroups');
+  function cardsIn(flow){ return Array.from(flow.querySelectorAll('.idea-card')).filter(function(b){ return !b.classList.contains('ph')&&!b.classList.contains('dragging')&&!b.classList.contains('editing'); }); }
+  // slide every card from where it was to where it lands
+  function flip(mutate){
+    const all=Array.from(wrap.querySelectorAll('.idea-card:not(.dragging),.idea-addb'));
+    const before=all.map(function(n){ return n.getBoundingClientRect(); });
+    mutate();
+    if(prefersReduced)return;
+    all.forEach(function(n,i){
+      const r=n.getBoundingClientRect(), dx=before[i].left-r.left, dy=before[i].top-r.top;
+      if(!dx&&!dy)return;
+      n.style.transition='none'; n.style.transform='translate('+dx+'px,'+dy+'px)';
+      n.getBoundingClientRect();
+      n.style.transition='transform .18s ease'; n.style.transform='';
+    });
+  }
+  function placeAt(d,x,y){
+    const hit=document.elementFromPoint(x,y);
+    const sec=hit&&hit.closest?hit.closest('.idea-group'):null;
+    wrap.querySelectorAll('.idea-group.over').forEach(function(n){ if(n!==sec)n.classList.remove('over'); });
+    if(!sec)return;
+    sec.classList.add('over');
+    const flow=sec.querySelector('.idea-cards');
+    let ref=flow.querySelector('.idea-addb')||null;
+    const list=cardsIn(flow);
+    for(let i=0;i<list.length;i++){
+      const r=list[i].getBoundingClientRect();
+      if(y<r.top+r.height/2){ ref=list[i]; break; }
+    }
+    if(d.ph.parentNode===flow&&(d.ph.nextSibling===ref||(ref===null&&!d.ph.nextSibling)))return;
+    flip(function(){ flow.insertBefore(d.ph,ref); });
+  }
+  function start(d){
+    d.active=true; buzz('tick');
+    const r=d.el.getBoundingClientRect();
+    d.dx=d.sx-r.left; d.dy=d.sy-r.top;
+    d.ph=el('div','idea-card ph'); d.ph.style.height=r.height+'px';
+    d.ghost=d.el.cloneNode(true); d.ghost.classList.add('lifted');
+    d.ghost.style.width=r.width+'px'; d.ghost.style.left=r.left+'px'; d.ghost.style.top=r.top+'px';
+    const g=getComputedStyle(d.el).backgroundColor; d.ghost.style.background=g;
+    document.body.appendChild(d.ghost);
+    d.el.parentNode.insertBefore(d.ph,d.el);
+    d.el.classList.add('dragging'); d.el.style.display='none';
+  }
+  function move(d,x,y){
+    d.ghost.style.left=(x-d.dx)+'px'; d.ghost.style.top=(y-d.dy)+'px';
+    placeAt(d,x,y);
+    // nudge the page when dragging near the top/bottom edge
+    if(y<50)window.scrollBy(0,-12); else if(y>window.innerHeight-50)window.scrollBy(0,12);
+  }
+  function finish(d,drop){
+    clearTimeout(d.timer);
+    if(d.ghost)d.ghost.remove();
+    wrap.querySelectorAll('.idea-group.over').forEach(function(n){ n.classList.remove('over'); });
+    const c=ideaCard(d.id);
+    if(drop&&c&&d.ph&&d.ph.parentNode){
+      const flow=d.ph.parentNode, gid=flow.dataset.group;
+      const prev=d.ph.previousElementSibling, next=d.ph.nextElementSibling;
+      const po=prev&&prev.dataset.id&&ideaCard(prev.dataset.id), no=next&&next.dataset.id&&ideaCard(next.dataset.id);
+      const order=po&&no?(po.order+no.order)/2:po?po.order+1:no?no.order-1:0;
+      if(gid!==ideaGroupOf(c)||order!==c.order){ c.group=gid; c.order=order; c.updatedAt=Date.now(); persist(); }
+    }
+    ideaUI.drag=null;
+    drawIdeas();
+  }
+  wrap.addEventListener('pointerdown',function(e){
+    if(e.button>0||ideaUI.drag)return;
+    let b=e.target.closest('.idea-card'); if(!b||!b.dataset.id||b.classList.contains('editing'))return;
+    const a=document.activeElement;
+    if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')&&wrap.contains(a)){ // save what's being typed first (that redraws the cards)
+      const id=b.dataset.id; a.blur();
+      b=Array.from(wrap.querySelectorAll('.idea-card')).find(function(n){ return n.dataset.id===id; });
+      if(!b)return;
+    }
+    const d={id:b.dataset.id,el:b,sx:e.clientX,sy:e.clientY,pid:e.pointerId,touch:e.pointerType!=='mouse',active:false};
+    ideaUI.drag=d;
+    if(d.touch)d.timer=setTimeout(function(){ if(ideaUI.drag===d)start(d); },260);
+    else e.preventDefault();
+  });
+  document.addEventListener('pointermove',function(e){
+    const d=ideaUI.drag; if(!d||e.pointerId!==d.pid)return;
+    if(!d.active){
+      const far=Math.abs(e.clientX-d.sx)+Math.abs(e.clientY-d.sy);
+      if(d.touch){ if(far>8){ clearTimeout(d.timer); ideaUI.drag=null; } return; } // a swipe: let the page scroll
+      if(far<5)return;
+      start(d);
+    }
+    move(d,e.clientX,e.clientY);
+  });
+  // once a hold-drag has started, stop the page from scrolling under the finger
+  document.addEventListener('touchmove',function(e){ if(ideaUI.drag&&ideaUI.drag.active)e.preventDefault(); },{passive:false});
+  document.addEventListener('pointerup',function(e){
+    const d=ideaUI.drag; if(!d||e.pointerId!==d.pid)return;
+    if(d.active){ finish(d,true); return; }
+    clearTimeout(d.timer); ideaUI.drag=null;
+    if(ideaCard(d.id)){ ideaUI.adding=null; ideaUI.editing=d.id; drawIdeas(); } // a click/tap: edit it
+  });
+  document.addEventListener('pointercancel',function(e){
+    const d=ideaUI.drag; if(!d||e.pointerId!==d.pid)return;
+    if(d.active)finish(d,false); else { clearTimeout(d.timer); ideaUI.drag=null; }
+  });
+  wrap.addEventListener('contextmenu',function(e){ if(e.target.closest('.idea-card'))e.preventDefault(); }); // long-press menu on phones
+  $('ideaAddGroup').addEventListener('click',ideaAddGroup);
+})();
 
 /* ── day detail popup ── */
 function dayPopKey(e){ if(e.key==='Escape'){ e.stopPropagation(); closeDayPop(); } }
@@ -2084,6 +2445,7 @@ $('tabList').addEventListener('click',function(){ switchTab('list'); });
 $('tabAgent').addEventListener('click',function(){ switchTab('agent'); });
 $('tabCal').addEventListener('click',function(){ switchTab('calendar'); });
 $('tabSchool').addEventListener('click',function(){ switchTab('school'); });
+$('tabIdeas').addEventListener('click',function(){ switchTab('ideas'); });
 $('calPrev').addEventListener('click',function(){ state.calMonth--; if(state.calMonth<0){state.calMonth=11;state.calYear--;} renderCal(); });
 $('calNext').addEventListener('click',function(){ state.calMonth++; if(state.calMonth>11){state.calMonth=0;state.calYear++;} renderCal(); });
 $('calToday').addEventListener('click',function(){ const n=new Date(); state.calYear=n.getFullYear(); state.calMonth=n.getMonth(); renderCal(); });
@@ -2102,7 +2464,7 @@ $('clearDone').addEventListener('click',function(){
   }
 });
 document.addEventListener('keydown',function(e){
-  if(e.key!=='/')return; const a=document.activeElement; if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'))return; e.preventDefault(); $('newTitle').focus();
+  if(e.key!=='/'||state.activeTab==='ideas')return; const a=document.activeElement; if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'))return; e.preventDefault(); $('newTitle').focus();
 });
 
 /* ── search ── */
@@ -2114,7 +2476,7 @@ $('searchBox').addEventListener('keydown',function(e){
 document.addEventListener('keydown',function(e){
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='f'){
     e.preventDefault();
-    if(state.activeTab==='calendar')switchTab('list');
+    if(state.activeTab==='calendar'||state.activeTab==='ideas')switchTab('list');
     $('searchBox').focus(); $('searchBox').select();
   }
 });
@@ -2125,7 +2487,7 @@ function selectNeighbor(){
   state.selectedId=navOrder[i+1]!==undefined?navOrder[i+1]:(i>0?navOrder[i-1]:null);
 }
 document.addEventListener('keydown',function(e){
-  if(state.activeTab==='calendar')return;
+  if(state.activeTab==='calendar'||state.activeTab==='ideas')return;
   const a=document.activeElement;
   if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT'||a.tagName==='BUTTON'))return;
   if(e.key==='ArrowDown'||e.key==='ArrowUp'){
@@ -2242,19 +2604,25 @@ $('routingSaveBtn').addEventListener('click',async function(){
   }catch(e){ $('routingStatus').textContent='save failed ('+e.message+')'; }
   setTimeout(function(){ $('routingStatus').textContent=''; },2500);
 });
+let prefsLoadedAt; // updated_at of the version in the box: Save only replaces that version (undefined = never loaded)
 async function prefsLoad(){
   lockedLoad();
   routingLoad();
   const p=prefsProfile(); $('prefsSection').hidden=!p; if(!p)return;
   $('prefsStatus').textContent='loading…';
-  try{ const d=await syncPull(p); $('prefsText').value=(d&&d.text)||''; $('prefsStatus').textContent=''; }
+  try{ const r=await syncPullRow(p); $('prefsText').value=(r.doc&&r.doc.text)||''; prefsLoadedAt=r.updatedAt; $('prefsStatus').textContent=''; }
   catch(e){ $('prefsStatus').textContent='could not load ('+e.message+')'; }
 }
 $('prefsSaveBtn').addEventListener('click',async function(){
   const p=prefsProfile(); if(!p)return;
+  if(prefsLoadedAt===undefined){ $('prefsStatus').textContent='not loaded yet: reopen ⚙ and try again'; return; }
   $('prefsStatus').textContent='saving…';
-  try{ await syncPushDoc(p,{v:1,text:$('prefsText').value}); $('prefsStatus').textContent='saved'; }
-  catch(e){ $('prefsStatus').textContent='save failed ('+e.message+')'; }
+  try{
+    // Claude (or the weekly tidy) may have added a line since this box was filled: don't erase it
+    if(await syncPushCas(p,{v:1,text:$('prefsText').value},prefsLoadedAt)){
+      const r=await syncPullRow(p); prefsLoadedAt=r.updatedAt; $('prefsStatus').textContent='saved';
+    } else { $('prefsStatus').textContent='changed elsewhere since you opened this: copy your edit, reopen ⚙, and save again'; return; }
+  }catch(e){ $('prefsStatus').textContent='save failed ('+e.message+')'; }
   setTimeout(function(){ $('prefsStatus').textContent=''; },2500);
 });
 $('themeApplyBtn').addEventListener('click',function(){
@@ -2418,7 +2786,8 @@ if(window.desktop&&window.desktop.onAgentResults){
 async function appendPrefs(lines){
   const p=prefsProfile(); if(!p)return;
   try{
-    const d=await syncPull(p); let text=((d&&d.text)||'').replace(/\s+$/,'');
+   for(let attempt=0;attempt<4;attempt++){ // compare-and-swap: never overwrite a change made meanwhile
+    const row=await syncPullRow(p), d=row.doc; let text=((d&&d.text)||'').replace(/\s+$/,'');
     const norm=function(x){ return String(x).toLowerCase().replace(/[^a-z0-9$]+/g,' ').trim(); };
     let changed=false;
     lines.forEach(function(l){
@@ -2433,7 +2802,9 @@ async function appendPrefs(lines){
       else { let end=h+1; while(end<rows.length&&!/^##\s+/.test(rows[end]))end++; while(end>h+1&&!rows[end-1].trim())end--; rows.splice(end,0,'- '+item); }
       text=rows.join('\n').replace(/^\n+/,''); changed=true;
     });
-    if(changed)await syncPushDoc(p,{v:1,text:text});
+    if(!changed||await syncPushCas(p,{v:1,text:text},row.updatedAt))return;
+   }
+   console.error('prefs append: the list kept changing');
   }catch(e){ console.error('prefs append failed',e); }
 }
 
@@ -2730,6 +3101,7 @@ store.load().then(async function(data){
     });
     state.tombstones=Array.isArray(data.tombstones)?data.tombstones:[];
   }
+  state.ideas=normIdeas(data&&data.ideas);
   rebuildSnap();
   render(); // list is the default active tab
   startSyncLoop();

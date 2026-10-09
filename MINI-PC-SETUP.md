@@ -85,6 +85,22 @@ including driving Claude's browser, so you get more done with fewer Claude credi
   notes, preferences, the locked profile, your calendar and the skills). It runs on this computer and
   sends nothing anywhere.
 
+### Working web pages (built 2026-10-09)
+A small model gets lost in raw page outlines, so `agent/page-reader.js` does the bookkeeping for it:
+- **It sees the page after every click or entry**, without spending a step on looking: popups first,
+  then any error the page shows ("Please enter a valid email"), then which fields are still empty
+  (required ones marked ⚠), then the page with each field's current value. Menus and footers are
+  folded into one line; long pages are cut, and `browser_find` reaches the rest.
+- **Its slips are fixed before they reach the browser:** a label instead of a ref ("Email" →
+  [f1e19]), a ref without its prefix, a dropdown choice in the wrong case, a radio "filled" with the
+  choice's text, fields given as {label: value}, addresses without https://.
+- **Forms are filled one field at a time**, so one wrong field doesn't lose the others, and it's told
+  which one failed.
+- **It's told when it repeats itself**, and when it has 4 steps left, so it reports instead of
+  running out.
+- New skill `agent/skills/web-forms.md`: popups, date and phone formats, fields that suggest as you
+  type, multi-page forms, job portals, and when to stop and ask.
+
 ### 5. Hook it up to the Tasks app (Claude builds this)
 - ⚙ Settings → **Model for Agent tasks**: Claude / My model / Auto.
   - **Auto:** your model handles tasks, including the browser. Claude takes over if your model gets
