@@ -151,14 +151,21 @@ FORM_JS = r"""(() => {
 class Tab:
     """One browser tab over the browser's remote-control (DevTools) protocol: send a command, get its answer."""
 
-    def __init__(self, ws):
-        self.ws, self.ids = ws, itertools.count(1)
+    def __init__(self, ws, tab_id: str):
+        self.ws, self.id, self.ids = ws, tab_id, itertools.count(1)
 
     @classmethod
-    async def open(cls, cdp: str, url_hint: str = ''):
+    async def open(cls, cdp: str, url_hint: str = '', tab_id: str = ''):
         tabs = [t for t in json.load(urllib.request.urlopen(cdp + '/json', timeout=10)) if t.get('type') == 'page']
-        tab = next((t for t in tabs if url_hint and t['url'] == url_hint), None) or tabs[0]
-        return cls(await websockets.connect(tab['webSocketDebuggerUrl'], max_size=None))
+        tab = (next((t for t in tabs if tab_id and t['id'] == tab_id), None) or next((t for t in tabs if url_hint and t['url'] == url_hint), None)
+               or tabs[0])
+        return cls(await websockets.connect(tab['webSocketDebuggerUrl'], max_size=None), tab['id'])
+
+    @classmethod
+    async def new(cls, cdp: str):
+        """A tab of its own, so it never takes over a page something else is using; it stays open for James."""
+        tab = json.load(urllib.request.urlopen(urllib.request.Request(cdp + '/json/new?about:blank', method='PUT'), timeout=10))
+        return cls(await websockets.connect(tab['webSocketDebuggerUrl'], max_size=None), tab['id'])
 
     async def call(self, method: str, params: dict | None = None, timeout: float = 30):
         n = next(self.ids)
@@ -218,7 +225,8 @@ async def oneshot(a, hosts: list, seen: dict) -> dict:
     url = a.url or (re.findall(r'https?://[^\s"\'<>)]+', a.task) or [''])[0]
     if not url: return {'skipped': 'no form address in the task'}
     if not allowed(url, hosts): return {'skipped': url + ' is not one of the allowed sites'}
-    tab = await Tab.open(a.cdp)
+    tab = await Tab.new(a.cdp)
+    seen["tab_id"] = tab.id
     try:
         await tab.goto(url)
         await tab.js(FORM_JS)
@@ -234,7 +242,13 @@ async def oneshot(a, hosts: list, seen: dict) -> dict:
         # a value Qwen gave that the page doesn't show = not placed: browser-use gets those
         unplaced = [label[i] + ' → ' + (', '.join(v) if isinstance(v, list) else str(v)) + ('' if res.get(i) == 'ok' else ' (' + str(res.get(i) or 'not filled') + ')')
                     for i, v in vals.items() if i in label and v not in ('', [], None) and not after.get(i)]
-        out = {'url': await tab.url(), 'unplaced': unplaced, 'missing': answer.get('missing') or []}
+        # what Qwen says it lacks, as labels, and only fields the page really shows empty (it named a filled one by id)
+        by_label = {v.lower(): k for k, v in label.items()}
+        missing = []
+        for m in answer.get('missing') or []:
+            i = m if m in label else by_label.get(str(m).strip().lower())
+            if i and not after.get(i) and label[i] not in missing: missing.append(label[i])
+        out = {'url': await tab.url(), 'unplaced': unplaced, 'missing': missing}
         if not unplaced:
             button = await tab.js('window.__qf.submitButton()')
             if a.approved and button:
@@ -301,9 +315,9 @@ async def agent(a, domains: list, seen: dict, task: str) -> dict:
     return {'url': urls[-1] if urls else '', 'steps': len(h.history), 'model_said': (h.final_result() or '')[:300]}
 
 
-async def read_back(cdp: str, url_hint: str):
+async def read_back(cdp: str, url_hint: str, tab_id: str = ""):
     """(url, [{label, value}]) of the page the run ended on, straight from the page."""
-    tab = await Tab.open(cdp, url_hint)
+    tab = await Tab.open(cdp, url_hint, tab_id)
     try:
         await tab.js(FORM_JS)
         return await tab.url(), await tab.js('window.__qf.read()')
@@ -370,7 +384,7 @@ async def main():
             out['agent'] = {'error': 'browser-use failed: ' + str(e)[:200]}
 
     try:
-        url, fields = await read_back(a.cdp, url)
+        url, fields = await read_back(a.cdp, url, seen.get("tab_id", ""))
         out.update(report(seen, url, fields, missing))
     except Exception as e:
         out.update({'status': 'needs-you', 'note': 'I couldn’t read the page back to check it (' + str(e)[:120] + ').'})
