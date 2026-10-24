@@ -32,6 +32,16 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # fail fast, and say why, when the token can't write to the releases repository
+      - name: Check the releases token
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        shell: bash
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "RELEASES_TOKEN secret is not set"; exit 1; fi
+          perms=$(gh api repos/jamesbobdev-gif/tasks-releases --jq '.permissions' 2>&1) || { echo "RELEASES_TOKEN can't read the releases repository: $perms"; exit 1; }
+          echo "token permissions on tasks-releases: $perms"
+          echo "$perms" | grep -q '"push":true' || { echo "RELEASES_TOKEN has no write (Contents: read and write) access to tasks-releases"; exit 1; }
       - run: npm ci
       - run: npm test
       # the app's own Google / Microsoft sign-in clients, when the repository has them as a secret
