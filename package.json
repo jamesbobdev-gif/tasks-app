@@ -1,7 +1,7 @@
 {
   "name": "romulus",
   "productName": "Romulus",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Romulus: a to-do list with an agent in it. Romulus killed Remus. This should kill your need for Meta Muse.",
   "main": "main.js",
   "scripts": {
