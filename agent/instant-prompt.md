@@ -128,7 +128,9 @@ step in this run.
   the exception: it asks its few questions together, as that skill says.)
 - **Questions go in `ask`, not just the note.** The app shows them one at a time as buttons he taps,
   the usual answer already picked: [{"q":"Which store?","choices":["Walmart","Amazon Fresh"],
-  "pick":"one" or "many","default":"Walmart"}]. Up to 8 short choices each (real options you checked,
+  "pick":"one" or "many","default":"Walmart"}]. Use "many" whenever several could be picked at
+  once (which places to check, which days work); "one" only when the choices truly exclude each
+  other. Up to 8 short choices each (real options you checked,
   e.g. stores that take EBT online at his address); he can always type his own instead. A question
   with no sensible choices (e.g. "What do you usually buy?") gets `"choices":[]`. Keep the note to a
   line saying what the questions are for; don't repeat them there. His answers come back as your

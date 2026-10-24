@@ -9,7 +9,7 @@ const askDrafts={}; // task id → {i, picks:[[...]], other:[...]}
 
 function askDraft(t){
   let d=askDrafts[t.id];
-  if(!d||d.picks.length!==t.ask.length)d=askDrafts[t.id]={i:0,picks:t.ask.map(function(a){ return (a.default||[]).slice(); }),other:t.ask.map(function(){ return ''; })};
+  if(!d||d.picks.length!==t.ask.length)d=askDrafts[t.id]={i:0,picks:t.ask.map(function(a){ return (a.default||[]).slice(); }),other:t.ask.map(function(){ return ''; }),many:t.ask.map(function(a){ return a.pick==='many'; })};
   return d;
 }
 function askAnswer(picks,other){
@@ -21,7 +21,7 @@ function askSteps(t){
   box.addEventListener('click',function(e){ e.stopPropagation(); });
   const draw=function(){
     box.innerHTML='';
-    const d=askDraft(t), n=t.ask.length, a=t.ask[d.i], last=d.i===n-1;
+    const d=askDraft(t), n=t.ask.length, a=t.ask[d.i], last=d.i===n-1, many=d.many[d.i];
     box.appendChild(el('div','ask-count',n>1?'Question '+(d.i+1)+' of '+n:'Question'));
     box.appendChild(el('div','ask-q',a.q));
     const next=el('button','btn-accent',last?'Send answers':'Next ›');
@@ -31,20 +31,26 @@ function askSteps(t){
       const b=el('button','ask-chip'+(on?' on':''),c); b.setAttribute('aria-pressed',String(on));
       b.addEventListener('click',function(){
         const p=d.picks[d.i], k=p.indexOf(c);
-        if(a.pick==='many'){ if(k===-1)p.push(c); else p.splice(k,1); }
+        if(many){ if(k===-1)p.push(c); else p.splice(k,1); }
         else { d.picks[d.i]=[c]; d.other[d.i]=''; if(!last){ buzz('tap'); d.i++; } } // one answer: on to the next question
         draw();
       });
       chips.appendChild(b);
     });
     if(a.choices.length)box.appendChild(chips);
+    // asked for one answer, but he isn't sure yet: let him pick several for this question
+    if(!many&&a.choices.length>1){
+      const several=el('button','ask-several','Pick more than one');
+      several.addEventListener('click',function(){ d.many[d.i]=true; draw(); });
+      box.appendChild(several);
+    }
     if(a.other){
       const inp=el(a.choices.length?'input':'textarea','ask-other');
       inp.placeholder=a.choices.length?'Or type your own…':'Type your answer…';
       inp.value=d.other[d.i];
       inp.addEventListener('input',function(){
         d.other[d.i]=inp.value;
-        if(a.pick!=='many'&&inp.value.trim()){ d.picks[d.i]=[]; chips.querySelectorAll('.ask-chip.on').forEach(function(x){ x.classList.remove('on'); }); }
+        if(!many&&inp.value.trim()){ d.picks[d.i]=[]; chips.querySelectorAll('.ask-chip.on').forEach(function(x){ x.classList.remove('on'); }); }
       });
       inp.addEventListener('keydown',function(e){ e.stopPropagation(); if(e.key==='Enter'&&!e.shiftKey&&inp.tagName==='INPUT'){ e.preventDefault(); next.click(); } });
       box.appendChild(inp);
