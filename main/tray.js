@@ -12,7 +12,7 @@ function createTray() {
   const { Tray, nativeImage } = require('electron');
   const icon = nativeImage.createFromPath(ctx.icon).resize({ width: 16, height: 16 });
   tray = new Tray(icon);
-  tray.setToolTip('Tasks');
+  tray.setToolTip('Romulus');
   buildMenu();
   tray.on('click', ctx.showWindow);
 }
@@ -39,7 +39,7 @@ function setUpdateReady(version, install) {
   if (tray) buildMenu();
 }
 
-// "Tasks — 3 overdue · 1 due today" for these tasks, counted from `today`
+// "Romulus — 3 overdue · 1 due today" for these tasks, counted from `today`
 function trayTip(tasks, today = new Date()) {
   today = new Date(today); today.setHours(0, 0, 0, 0);
   let overdue = 0, dueToday = 0;
@@ -53,7 +53,7 @@ function trayTip(tasks, today = new Date()) {
   const parts = [];
   if (overdue) parts.push(overdue + ' overdue');
   if (dueToday) parts.push(dueToday + ' due today');
-  return parts.length ? 'Tasks — ' + parts.join(' · ') : 'Tasks';
+  return parts.length ? 'Romulus — ' + parts.join(' · ') : 'Romulus';
 }
 
 function refreshTrayStatus(raw) {

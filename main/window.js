@@ -42,7 +42,7 @@ function createWindow() {
     height: 860,
     minWidth: 420,
     minHeight: 480,
-    title: 'Tasks',
+    title: 'Romulus',
     icon: ICON,
     backgroundColor: '#FBFBFA',
     autoHideMenuBar: true,

@@ -1,6 +1,6 @@
-# Tasks
+# Romulus
 
-**Think of it as an open-source Meta Muse.**
+**Romulus killed Remus. This should kill your need for Meta Muse.** Think of it as an open-source Meta Muse.
 
 **A to-do list with an agent in it.** Write a task the way you'd tell a person ("find me the cheapest flight to Denver the weekend of the 14th", "order the groceries", "apply to these three internships", "draft a reply to the landlord"), hand it to the Agent, and it goes and does it: searches the web, reads pages, fills forms, compares prices, builds the cart, drafts the email. It comes back to you only when it needs a decision, and it **never buys, sends, submits or books anything until you reply "yes"** to the exact thing it described.
 
@@ -62,7 +62,7 @@ The same lists on your phone, kept in sync, with home-screen widgets, a quick-ad
 ## Install
 
 **Windows**
-1. Download `Tasks-Setup-<version>.exe` from the [latest release](../../releases/latest).
+1. Download `Romulus-Setup-<version>.exe` from the [latest release](../../releases/latest).
 2. Run it. Windows shows an "unrecognized app" warning because the installer isn't code-signed yet: click **More info → Run anyway**.
 3. Tasks opens. From then on it starts when you log in and lives in the tray by the clock. Closing the window hides it there; right-click the tray icon to quit.
 4. Optional: Start menu → right-click **Tasks** → Pin to taskbar.
@@ -141,7 +141,7 @@ Everything you connect stays on the computer where you connected it, in the app'
 
 | File | What it is |
 |---|---|
-| `Tasks-Setup-<version>.exe` | The installer. The only file most people need. |
+| `Romulus-Setup-<version>.exe` | The installer. The only file most people need. |
 | `latest.yml` | What installed copies read to find out a new version exists. |
 | `*.blockmap` | Lets an update download only the parts that changed. |
 

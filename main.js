@@ -40,6 +40,9 @@ const updater = require('./main/updater');
 // Match the installer's shortcut ID so Windows shows our icon on the taskbar
 if (process.platform === 'win32') app.setAppUserModelId('com.jartro.tasks');
 
+// The app used to be called Tasks: bring an existing user-data folder over to Romulus's (main/migrate-data.js)
+try { require('./main/migrate-data').migrateUserData(path.join(app.getPath('appData'), 'Tasks'), app.getPath('userData')); } catch (e) { console.error('user-data migration failed', e); }
+
 win.guardIpc(ipcMain);
 store.init({ userData: () => app.getPath('userData'), safeStorage });
 const { readConfig, writeConfig, agentLog } = store;

@@ -1,6 +1,6 @@
 {
   "appId": "com.jartro.tasks",
-  "appName": "Tasks",
+  "appName": "Romulus",
   "webDir": "www",
   "android": {
     "allowMixedContent": false

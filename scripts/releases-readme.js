@@ -27,7 +27,7 @@ function syncReadme() {
 // the notes on a release page: which of the files is the installer. `node scripts/releases-readme.js notes 1.0.2`
 function releaseNotes(version) {
   return [
-    `## Download **Tasks-Setup-${version}.exe** and run it`,
+    `## Download **Romulus-Setup-${version}.exe** and run it`,
     '',
     'That one file is the installer for Windows. It updates an existing copy in place; your tasks and settings stay.',
     'Windows shows an "unrecognized app" warning because the installer isn\'t code-signed yet: click **More info → Run anyway**.',

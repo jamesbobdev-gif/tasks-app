@@ -11,7 +11,7 @@ Tasks works the moment you install it: a to-do list on your computer, nothing to
 
 ## 1. Install
 
-**Windows:** download `Tasks-Setup-<version>.exe` from the [releases page](https://github.com/jamesbobdev-gif/tasks-releases/releases) and run it. The installer is not code-signed yet, so Windows shows an "unrecognized app" warning: click **More info → Run anyway**. Tasks starts when you log in and lives in the tray near the clock; closing the window hides it there. To pin it: Start menu → right-click **Tasks** → Pin to taskbar.
+**Windows:** download `Romulus-Setup-<version>.exe` from the [releases page](https://github.com/jamesbobdev-gif/tasks-releases/releases) and run it. The installer is not code-signed yet, so Windows shows an "unrecognized app" warning: click **More info → Run anyway**. Tasks starts when you log in and lives in the tray near the clock; closing the window hides it there. To pin it: Start menu → right-click **Tasks** → Pin to taskbar.
 
 **Mac / Linux:** build it yourself for now (`npm install && npm run dist`; see the [README](../README.md)).
 

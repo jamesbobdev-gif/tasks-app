@@ -1,8 +1,8 @@
 {
-  "name": "tasks",
-  "productName": "Tasks",
+  "name": "romulus",
+  "productName": "Romulus",
   "version": "1.0.2",
-  "description": "A clean, minimal to-do app",
+  "description": "Romulus: a to-do list with an agent in it. Romulus killed Remus. This should kill your need for Meta Muse.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -16,7 +16,7 @@
   },
   "build": {
     "appId": "com.jartro.tasks",
-    "productName": "Tasks",
+    "productName": "Romulus",
     "files": [
       "main.js",
       "main/**",
@@ -42,7 +42,7 @@
       "releaseType": "release"
     },
     "nsis": {
-      "artifactName": "Tasks-Setup-${version}.${ext}"
+      "artifactName": "Romulus-Setup-${version}.${ext}"
     }
   },
   "dependencies": {

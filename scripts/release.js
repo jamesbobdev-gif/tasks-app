@@ -19,7 +19,7 @@ if (!token) { console.error('Not signed in to GitHub. Run: gh auth login'); proc
 
 try { run(`gh repo view ${owner}/${repo}`, { stdio: 'ignore' }); } catch (e) {
   console.log(`Making ${owner}/${repo} (public, installers only)…`);
-  run(`gh repo create ${owner}/${repo} --public --description "Installers for Tasks (auto-update)" --add-readme`, { stdio: 'inherit' });
+  run(`gh repo create ${owner}/${repo} --public --description "Installers for Romulus (auto-update)" --add-readme`, { stdio: 'inherit' });
 }
 
 const bump = (v) => v.split('.').map(Number).map((n, i) => (i === 2 ? n + 1 : n)).join('.');
