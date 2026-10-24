@@ -251,11 +251,12 @@ function buildPanel(t){
     const nb=el('div','agent-note');
     const who=t.lane==='local'?'The local model':cloudNameOf(t);
     const stuck=t.status==='needs-you'&&!agentBusy&&t.stuck;
-    if(agentBusy||stuck||t.status!=='needs-you')nb.appendChild(el('b',null,agentBusy?who+'’s last message':stuck?who+' stopped':'From '+who));
+    if(agentBusy||stuck||t.status!=='needs-you')nb.appendChild(el('b',null,agentBusy?who+'’s last message':stuck?'Stopped':'From '+who)); // who it was is on the task's badge
     if(stuck){
+      // why, then what to do: plain lines, the fix quieter
       const sk=el('div','stuck');
-      const row=function(label,text){ if(!text)return; const r=el('div','stuck-row'); r.appendChild(el('span','stuck-k',label)); r.appendChild(el('span',null,text)); sk.appendChild(r); };
-      row('Why',t.stuck.reason); row('Fix',t.stuck.fix);
+      if(t.stuck.reason)sk.appendChild(el('div',null,t.stuck.reason));
+      if(t.stuck.fix)sk.appendChild(el('div','stuck-fix',t.stuck.fix));
       nb.appendChild(sk);
       // the model's own note, when it says more than the reason above
       if(t.note&&t.note.indexOf(t.stuck.reason)===-1)nb.appendChild(el('div','stuck-note',t.note));
@@ -265,8 +266,11 @@ function buildPanel(t){
     if(!stuck&&isDocAnswer(t.note))nb.appendChild(docButton(t.title,t.note)); // an essay or a letter: save it as a Word file
     // the latest answer's "What it did", right under it (older ones are in the conversation)
     const lastAns=(t.history||[]).filter(function(h){ return h.who==='claude'; }).slice(-1)[0];
-    if(lastAns&&lastAns.thoughts&&t.status!=='working')nb.appendChild(thoughtsBox(t,lastAns));
-    if(!agentBusy&&!t.done&&t.status==='needs-you'&&(stuck||failed)&&window.desktop&&window.desktop.agentRetry)nb.appendChild(retryButton(t));
+    // "What it did" and Retry share one line
+    const foot=el('div','note-foot');
+    if(lastAns&&lastAns.thoughts&&t.status!=='working')foot.appendChild(thoughtsBox(t,lastAns));
+    if(!agentBusy&&!t.done&&t.status==='needs-you'&&(stuck||failed)&&window.desktop&&window.desktop.agentRetry)foot.appendChild(retryButton(t));
+    if(foot.firstChild)nb.appendChild(foot);
     if(!t.done&&t.status==='needs-you'&&t.lane!=='local'&&liveViewAvailable())nb.appendChild(watchButton(t)); // e.g. to log in, or check a cart (its own tabs: fine while another task runs)
     panel.appendChild(nb);
   }
@@ -426,7 +430,8 @@ function buildPanel(t){
     }
     send.addEventListener('click',doSend);
     ta.addEventListener('keydown',function(e){ if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){ e.preventDefault(); doSend(); } });
-    rb.appendChild(ta); rb.appendChild(arow); rb.appendChild(send);
+    arow.appendChild(send); // + Photo on the left, Send on the right, one row
+    rb.appendChild(ta); rb.appendChild(arow);
     panel.appendChild(rb);
   }
 

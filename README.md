@@ -89,7 +89,7 @@ Tasks are in `tasks.json` in the app's user-data folder (`%APPDATA%\Tasks` on Wi
 
 ### Desktop behaviour
 
-The installed app starts at login (toggle in the tray menu), hides to the tray when closed, and reappears when the screen wakes or unlocks. Windows won't let an app pin itself: Start menu → right-click **Tasks** → Pin to taskbar.
+The installed app starts at login (toggle in the tray menu), hides to the tray when closed, and reappears when the screen wakes or unlocks. Windows won't let an app pin itself: Start menu → right-click **Romulus** → Pin to taskbar.
 
 ### Theme
 
